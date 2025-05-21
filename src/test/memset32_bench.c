@@ -1,6 +1,6 @@
-#include "test/memset32_bench.h"
+#include "memset32_bench.h"
 
-int 
+int
 main(void)
 {
     benchMemset32(); 

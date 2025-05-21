@@ -5,6 +5,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(membench VERSION 1.0.0 LANGUAGES C)
 
-add_executable(membench src/main.c src/print.c)
+function(create_target target_name)
+    add_executable(${target_name} ${ARGN})
+    target_include_directories(${target_name} PRIVATE src)
+    target_compile_options(${target_name} PRIVATE -O3 -msse2 -mavx -Wall -Wextra -Wpedantic -Werror)
+endfunction()
 
-target_compile_options(membench PRIVATE -O3 -msse2 -mavx -Wall -Wextra -Wpedantic -Werror)
+create_target(membench src/main.c src/print.c)
+
+create_target(memset32 src/test/memset32_bench.c src/print.c)
