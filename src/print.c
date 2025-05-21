@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "err.h"
 #include "print.h"
 #include "value.h"
 
@@ -92,7 +93,7 @@ benchPrintRows(struct rows *rows)
     assert(rows != NULL); 
 
     if (!rows->ncols)
-        return ERR_INVAID_VALUE;
+        return -ERR_INVAID_VALUE;
     
     assert(rows->cols != NULL);
 
@@ -123,15 +124,27 @@ benchPrintRows(struct rows *rows)
             struct column *col = rows->cols + v; 
             struct value value = row->values[v]; 
             unsigned len = 0, i = 0; 
+            int tmp; 
             char fmt[10]; 
             fmt[i++] = '%';
-            fmt[i++] = getValueFormatSpecifier(value.type);
+            char c = getValueFormatSpecifier(value.type);
+            /* handle unknown types */
+            if (c == 0) {
+                c = 's'; 
+                value.type = VALUE_TYPE_STRING;
+                value.v.s = UNKNOWN_VALUE_TYPE_MESSAGE; 
+            }
+            fmt[i++] = c;
             if (col->suffix != NULL) {
                 fmt[i++] = '%';
                 fmt[i++] = 's'; 
             }
             fmt[i++] = '\0'; 
-            len = snprintfValue(value, NULL, col->suffix, 0, fmt); 
+            tmp = snprintfValue(value, NULL, col->suffix, 0, fmt); 
+            if (tmp < 0)
+                len = strlen(UNKNOWN_VALUE_TYPE_MESSAGE); 
+            else 
+                len = tmp; 
             if (maxSizesPerRow[v] < len)
                 maxSizesPerRow[v] = len; 
             if (len > maxSize)
@@ -195,42 +208,30 @@ benchPrintRows(struct rows *rows)
                 fmt[i++] = '-'; 
             fmt[i++] = '*';
             if (col->suffix == NULL) {
-                fmt[i++] = getValueFormatSpecifier(value.type); 
+                char c = getValueFormatSpecifier(value.type); 
+                /* handle unknown types */
+                if (c == 0) {
+                    c = 's'; 
+                    value.type = VALUE_TYPE_STRING;
+                    value.v.s = UNKNOWN_VALUE_TYPE_MESSAGE; 
+                }
+                fmt[i++] = c;
             } else {
                 /* construct string with value type and suffix */
                 fmt[i++] = 's'; 
                 char fmt2[5] = { '%', getValueFormatSpecifier(value.type), '%', 's', '\0' };
-                snprintfValue(value, scratch, col->suffix, maxSize, fmt2);
+                /* handle unknown types */
+                if (fmt2[1] == 0) {
+                    fmt2[1] = 's';
+                    value.v.s = UNKNOWN_VALUE_TYPE_MESSAGE; 
+                } else {
+                    snprintfValue(value, scratch, col->suffix, maxSize, fmt2);
+                    value.v.s = scratch; 
+                }
                 value.type = VALUE_TYPE_STRING;
-                value.v.s = scratch; 
             }
             fmt[i++] = '\0';
-            switch (value.type) {
-                case VALUE_TYPE_STRING:
-                    printf(fmt, maxSizesPerRow[v], value.v.s); 
-                    break;
-                case VALUE_TYPE_UCHAR:
-                    printf(fmt, maxSizesPerRow[v], value.v.uc); 
-                    break;
-                case VALUE_TYPE_CHAR:
-                    printf(fmt, maxSizesPerRow[v], value.v.c); 
-                    break;
-                case VALUE_TYPE_UINT:
-                    printf(fmt, maxSizesPerRow[v], value.v.u); 
-                    break;
-                case VALUE_TYPE_INT:
-                    printf(fmt, maxSizesPerRow[v], value.v.i); 
-                    break;
-                case VALUE_TYPE_FLOAT:
-                    printf(fmt, maxSizesPerRow[v], value.v.f); 
-                    break;
-                case VALUE_TYPE_DOUBLE:
-                    printf(fmt, maxSizesPerRow[v], value.v.d); 
-                    break;
-                default:
-                    printf("%-*s", maxSizesPerRow[v], UNKNOWN_VALUE_TYPE_MESSAGE);
-                    break;
-            }
+            PRINTF_VALUE_PREARG1(value, fmt, maxSizesPerRow[v]); 
             if (v != rows->ncols - 1) {
                 printf("│");
             }
@@ -265,14 +266,16 @@ benchPrintRows(struct rows *rows)
     }
     printf("┘\n");
 
+    free(maxSizesPerRow);
+
     return 0; 
 }
 
 void
 freePrintRows(struct rows *rows)
 {
-    assert(rows != NULL); 
 
+    assert(rows != NULL); 
     if (rows->ncols) {
         assert(rows->cols != NULL); 
         free(rows->cols);
@@ -280,6 +283,12 @@ freePrintRows(struct rows *rows)
 
     if (rows->nrows) {
         assert(rows->rows != NULL); 
+
+        for (unsigned i = 0; i < rows->nrows; i++) {
+            struct row *row = rows->rows + i; 
+            free(row->values);
+        }
+
         free(rows->rows); 
     }
 }

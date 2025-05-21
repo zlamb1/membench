@@ -73,13 +73,13 @@ getValueFormatSpecifier(enum ValueType type)
 {
     switch (type) {
         case VALUE_TYPE_STRING: return 's';
-        case VALUE_TYPE_UCHAR: return 'u';
-        case VALUE_TYPE_CHAR: return 'c';
-        case VALUE_TYPE_UINT: return 'u';
-        case VALUE_TYPE_INT: return 'd';
-        case VALUE_TYPE_FLOAT: return 'f';
+        case VALUE_TYPE_UCHAR:  return 'u';
+        case VALUE_TYPE_CHAR:   return 'c';
+        case VALUE_TYPE_UINT:   return 'u';
+        case VALUE_TYPE_INT:    return 'd';
+        case VALUE_TYPE_FLOAT:  return 'f';
         case VALUE_TYPE_DOUBLE: return 'f'; 
-        default: return 's'; 
+        default:                return 0; 
     }
 }
 
@@ -102,8 +102,27 @@ snprintfValue(struct value value, char *buf, const char *suffix, size_t maxlen, 
         case VALUE_TYPE_DOUBLE:
             return snprintf(buf, maxlen, fmt, value.v.d, suffix);
         default:
-            return 0;
+            return -1;
     }
 }
+
+#define PRINTF_VALUE_PREARG1(VALUE, FMT, ARG1) \
+    switch ((VALUE).type) { \
+        case VALUE_TYPE_STRING: \
+            printf((FMT), (ARG1), (VALUE).v.s); break; \
+        case VALUE_TYPE_UCHAR: \
+            printf((FMT), (ARG1), (VALUE).v.uc); break; \
+        case VALUE_TYPE_CHAR: \
+            printf((FMT), (ARG1), (VALUE).v.c); break; \
+        case VALUE_TYPE_UINT: \
+            printf((FMT), (ARG1), (VALUE).v.u); break; \
+        case VALUE_TYPE_INT: \
+            printf((FMT), (ARG1), (VALUE).v.i); break; \
+        case VALUE_TYPE_FLOAT: \
+            printf((FMT), (ARG1), (VALUE).v.f); break; \
+        case VALUE_TYPE_DOUBLE: \
+            printf((FMT), (ARG1), (VALUE).v.d); break; \
+    }
+
 
 #endif

@@ -1,9 +1,6 @@
 #ifndef PRINT_H
 #define PRINT_H 1
 
-#define ERR_ALLOC         1
-#define ERR_INVAID_VALUE  2
-
 #include "value.h"
 
 enum 
