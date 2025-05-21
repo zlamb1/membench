@@ -1,26 +1,26 @@
-#ifndef MB_MEMSET32_BENCH_H
-#define MB_MEMSET32_BENCH_H 1
+#ifndef MB_MEMSET_BENCH_H
+#define MB_MEMSET_BENCH_H 1
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
 
-#include "mem/memset32.h"
+#include "mem/memset.h"
 #include "print.h"
 
-static inline void * 
-mb_memcmp32(void *buf, int v, size_t n)
+static inline void *
+mb_memcmp(void *buf, char c, size_t n)
 {
-    int *dp = (int *) buf; 
-    while (n--)
-        if (*dp++ != v)
-            return --dp;  
-    return NULL;
+    char *cp = (char *) buf;  
+    while (n--) {
+        if (*cp++ != c)
+            return --cp;
+    }
+    return NULL; 
 }
 
-#define BENCH_MEMSET32_HEADER() \
+#define BENCH_MEMSET_HEADER() \
     struct rows rows; \
     mbInitRows(&rows); \
     mbAddColumn(&rows, "Function Name", VALUE_TYPE_STRING); \
@@ -41,28 +41,27 @@ mb_memcmp32(void *buf, int v, size_t n)
     mbSetColumnAlign(&rows, COLUMN_ALIGN_RIGHT); \
     mbSetColumnSuffix(&rows, "gb/s");
 
-#define BENCH_MEMSET32(F, A) \
+#define BENCH_MEMSET(F, A) \
     do { \
-        unsigned iters = 1000, __i = iters; \
-        size_t size = (A), bytes = size * 4; \
-        int v = 0xAABBCCDD; \
+        unsigned iters = 100, __i = iters; \
+        size_t bytes = (A); \
+        char c = 0x5F; \
         struct timespec start, end; \
         double gb = bytes / 1000000000.0, elapsed = 0, avg, min = 999999, max = 0, t; \
         while (__i--) { \
-            void *buf = malloc(bytes), *tmp; \
-            memset(buf, 0, bytes); \
+            void *tmp; \
+            memset(buf, 0x1, bytes); \
             clock_gettime(CLOCK_MONOTONIC, &start); \
-            (F)(buf, v, size); \
+            (F)(buf, c, bytes); \
             clock_gettime(CLOCK_MONOTONIC, &end); \
-            if ((tmp = mb_memcmp32(buf, v, size)) != NULL) { \
-                printf("%s failed -> expected '%i', got '%i'\n", #F, v, ((int *) tmp)[0]); \
+            if ((tmp = mb_memcmp(buf, c, bytes)) != NULL) { \
+                printf("%s failed -> expected '%i', got '%i'\n", #F, c, ((int *) tmp)[0]); \
                 exit(-1); \
             } \
             t = (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_nsec - start.tv_nsec) / 1000000.0; \
             if (min > t) min = t; \
             if (max < t) max = t; \
             elapsed += t; \
-            free(buf); \
         } \
         avg = elapsed / iters; \
         mbAddRow(&rows); \
@@ -75,15 +74,22 @@ mb_memcmp32(void *buf, int v, size_t n)
         mbAddValue(&rows, createValueDouble(gb / (avg / 1000.0))); \
     } while (0);
 
+#define MB_MAX_ALLOC 20
+
 void
-benchMemset32(void)
+benchMemset(void)
 {
-    BENCH_MEMSET32_HEADER(); 
-    for (unsigned i = 0; i <= 18; i++) {
-        BENCH_MEMSET32(mb_memset32_aligned, 1 << i);
-        BENCH_MEMSET32(mb_memset32_aligned_sse2_unaligned, 1 << i); 
-        BENCH_MEMSET32(mb_memset32_aligned_avx_unaligned, 1 << i); 
+    BENCH_MEMSET_HEADER(); 
+    void *buf = malloc(1 << MB_MAX_ALLOC); 
+    for (unsigned i = 0; i <= MB_MAX_ALLOC; i++) {
+        BENCH_MEMSET(mb_memset, 1 << i);
+        BENCH_MEMSET(mb_memset_aligned, 1 << i); 
+        BENCH_MEMSET(mb_memset_sse2_unaligned, 1 << i);
+        BENCH_MEMSET(mb_memset_aligned_sse2_unaligned, 1 << i);
+        BENCH_MEMSET(mb_memset_avx2, 1 << i);
+        BENCH_MEMSET(memset, 1 << i);
     } 
+    free(buf);
     mbPrintRows(&rows);
     mbFreeRows(&rows);
 }
