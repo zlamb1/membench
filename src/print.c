@@ -188,8 +188,10 @@ benchPrintRows(struct rows *rows)
     
     /* allocate scratch buffer for handling suffixes */
     char *scratch = malloc(maxSize + 1); 
-    if (scratch == NULL)
-        return -ERR_ALLOC; 
+    if (scratch == NULL) {
+        free(maxSizesPerRow); 
+        return -ERR_ALLOC;
+    } 
     scratch[maxSize] = '\0'; 
 
     /* print rows */
