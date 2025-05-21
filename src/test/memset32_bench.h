@@ -44,12 +44,12 @@ mb_memcmp32(void *buf, int v, size_t n)
 #define BENCH_MEMSET32(F, A) \
     do { \
         unsigned iters = 1000, __i = iters; \
-        size_t size = (A), bytes = size * 4; \
+        size_t size = (A), bytes = size * sizeof(int); \
         int v = 0xAABBCCDD; \
         struct timespec start, end; \
         double gb = bytes / 1000000000.0, elapsed = 0, avg, min = 999999, max = 0, t; \
         while (__i--) { \
-            void *buf = malloc(bytes), *tmp; \
+            void *tmp; \
             memset(buf, 0, bytes); \
             clock_gettime(CLOCK_MONOTONIC, &start); \
             (F)(buf, v, size); \
@@ -62,7 +62,6 @@ mb_memcmp32(void *buf, int v, size_t n)
             if (min > t) min = t; \
             if (max < t) max = t; \
             elapsed += t; \
-            free(buf); \
         } \
         avg = elapsed / iters; \
         mbAddRow(&rows); \
@@ -75,15 +74,18 @@ mb_memcmp32(void *buf, int v, size_t n)
         mbAddValue(&rows, createValueDouble(gb / (avg / 1000.0))); \
     } while (0);
 
+#define MB_MAX_ALLOC 18
+
 void
 benchMemset32(void)
 {
-    BENCH_MEMSET32_HEADER(); 
+    BENCH_MEMSET32_HEADER();
+    void *buf = malloc(sizeof(int) * (1 << MB_MAX_ALLOC));
     for (unsigned i = 0; i <= 18; i++) {
         BENCH_MEMSET32(mb_memset32_aligned, 1 << i);
         BENCH_MEMSET32(mb_memset32_aligned_sse2_unaligned, 1 << i); 
         BENCH_MEMSET32(mb_memset32_aligned_avx_unaligned, 1 << i); 
-    } 
+    }
     mbPrintRows(&rows);
     mbFreeRows(&rows);
 }

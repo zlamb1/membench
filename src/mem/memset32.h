@@ -24,30 +24,32 @@ mb_memset32_aligned(void *p, int v, size_t n)
 static inline void *
 mb_memset32_aligned_sse2_unaligned(void *p, int v, size_t n)
 {
-    size_t x = 0; 
+    unsigned cnt = n >> 2; 
+    int *ip = (int *) p;
     __m128i vec = _mm_set1_epi32(v); 
-    int *dp = (int *) p;  
-    while (x + 4 <= n) {
-        _mm_storeu_si128((__m128i *) (dp + x), vec);
-        x += 4; 
+    n &= 3;
+    while (cnt--) {
+        _mm_storeu_si128((__m128i *) ip, vec);
+        ip += 4; 
     }
-    while (x < n)
-        dp[x++] = v; 
+    while (n--)
+        *ip++ = v; 
     return p;
 }
 
 static inline void *
 mb_memset32_aligned_avx_unaligned(void *p, int v, size_t n)
 {
-    size_t x = 0; 
-    __m256i vec = _mm256_set1_epi32(v); 
-    int *dp = (int *) p;  
-    while (x + 8 <= n) {
-        _mm256_storeu_si256((__m256i *) (dp + x), vec);
-        x += 8; 
+    unsigned cnt = n >> 3;
+    int *ip = (int *) p;  
+    __m256i vec = _mm256_set1_epi32(v);
+    n &= 7;  
+    while (cnt--) {
+        _mm256_storeu_si256((__m256i *) ip, vec);
+        ip += 8;
     }
-    while (x < n)
-        dp[x++] = v; 
+    while (n--)
+        *ip++ = v; 
     return p;
 }
 
