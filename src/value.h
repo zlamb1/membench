@@ -1,5 +1,5 @@
-#ifndef VALUE_H
-#define VALUE_H 1
+#ifndef MB_VALUE_H
+#define MB_VALUE_H 1
 
 #include <stdarg.h>
 #include <stdio.h>

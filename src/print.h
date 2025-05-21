@@ -1,5 +1,5 @@
-#ifndef PRINT_H
-#define PRINT_H 1
+#ifndef MB_PRINT_H
+#define MB_PRINT_H 1
 
 #include "value.h"
 
@@ -35,27 +35,27 @@ rows
 };
 
 void 
-initPrintRows(struct rows *rows); 
+mbInitRows(struct rows *rows); 
 
 int
-addPrintCol(struct rows *rows, const char *name, enum ValueType type); 
+mbAddColumn(struct rows *rows, const char *name, enum ValueType type); 
 
 void 
-setColumnAligment(struct rows *rows, enum ColumnAlign align);
+mbSetColumnAlign(struct rows *rows, enum ColumnAlign align);
 
 void 
-setColumnSuffix(struct rows *rows, const char *suffix); 
+mbSetColumnSuffix(struct rows *rows, const char *suffix); 
 
 int 
-addPrintRow(struct rows *rows); 
+mbAddRow(struct rows *rows); 
 
 int 
-addPrintValue(struct rows *rows, struct value value); 
+mbAddValue(struct rows *rows, struct value value); 
 
 int 
-benchPrintRows(struct rows *rows);
+mbPrintRows(struct rows *rows);
 
 void
-freePrintRows(struct rows *rows);  
+mbFreeRows(struct rows *rows);  
 
 #endif

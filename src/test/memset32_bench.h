@@ -1,5 +1,5 @@
-#ifndef MEMSET32_BENCH_H
-#define MEMSET32_BENCH_H 1
+#ifndef MB_MEMSET32_BENCH_H
+#define MB_MEMSET32_BENCH_H 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,7 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "memset32.h"
+#include "mem/memset32.h"
 #include "print.h"
 
 static inline void * 
@@ -22,24 +22,24 @@ memcmp32(void *buf, int v, size_t n)
 
 #define BENCH_MEMSET32_HEADER() \
     struct rows rows; \
-    initPrintRows(&rows); \
-    addPrintCol(&rows, "Function Name", VALUE_TYPE_STRING); \
-    addPrintCol(&rows, "Iterations", VALUE_TYPE_UINT); \
-    setColumnAligment(&rows, COLUMN_ALIGN_RIGHT); \
-    addPrintCol(&rows, "Allocation Size", VALUE_TYPE_UINT); \
-    setColumnSuffix(&rows, " BYTES"); \
-    addPrintCol(&rows, "Average Time", VALUE_TYPE_DOUBLE); \
-    setColumnAligment(&rows, COLUMN_ALIGN_RIGHT); \
-    setColumnSuffix(&rows, "ms"); \
-    addPrintCol(&rows, "Minimum Time", VALUE_TYPE_DOUBLE); \
-    setColumnAligment(&rows, COLUMN_ALIGN_RIGHT); \
-    setColumnSuffix(&rows, "ms"); \
-    addPrintCol(&rows, "Maximum Time", VALUE_TYPE_DOUBLE); \
-    setColumnAligment(&rows, COLUMN_ALIGN_RIGHT); \
-    setColumnSuffix(&rows, "ms"); \
-    addPrintCol(&rows, "Memory Throughput", VALUE_TYPE_DOUBLE); \
-    setColumnAligment(&rows, COLUMN_ALIGN_RIGHT); \
-    setColumnSuffix(&rows, "gb/s");
+    mbInitRows(&rows); \
+    mbAddColumn(&rows, "Function Name", VALUE_TYPE_STRING); \
+    mbAddColumn(&rows, "Iterations", VALUE_TYPE_UINT); \
+    mbSetColumnAlign(&rows, COLUMN_ALIGN_RIGHT); \
+    mbAddColumn(&rows, "Allocation Size", VALUE_TYPE_UINT); \
+    mbSetColumnSuffix(&rows, " BYTES"); \
+    mbAddColumn(&rows, "Average Time", VALUE_TYPE_DOUBLE); \
+    mbSetColumnAlign(&rows, COLUMN_ALIGN_RIGHT); \
+    mbSetColumnSuffix(&rows, "ms"); \
+    mbAddColumn(&rows, "Minimum Time", VALUE_TYPE_DOUBLE); \
+    mbSetColumnAlign(&rows, COLUMN_ALIGN_RIGHT); \
+    mbSetColumnSuffix(&rows, "ms"); \
+    mbAddColumn(&rows, "Maximum Time", VALUE_TYPE_DOUBLE); \
+    mbSetColumnAlign(&rows, COLUMN_ALIGN_RIGHT); \
+    mbSetColumnSuffix(&rows, "ms"); \
+    mbAddColumn(&rows, "Memory Throughput", VALUE_TYPE_DOUBLE); \
+    mbSetColumnAlign(&rows, COLUMN_ALIGN_RIGHT); \
+    mbSetColumnSuffix(&rows, "gb/s");
 
 #define BENCH_MEMSET32(F, A) \
     do { \
@@ -65,14 +65,14 @@ memcmp32(void *buf, int v, size_t n)
             free(buf); \
         } \
         avg = elapsed / iters; \
-        addPrintRow(&rows); \
-        addPrintValue(&rows, createValueString(#F)); \
-        addPrintValue(&rows, createValueUInt(iters)); \
-        addPrintValue(&rows, createValueUInt(bytes)); \
-        addPrintValue(&rows, createValueDouble(avg)); \
-        addPrintValue(&rows, createValueDouble(min)); \
-        addPrintValue(&rows, createValueDouble(max)); \
-        addPrintValue(&rows, createValueDouble(gb / (avg / 1000.0))); \
+        mbAddRow(&rows); \
+        mbAddValue(&rows, createValueString(#F)); \
+        mbAddValue(&rows, createValueUInt(iters)); \
+        mbAddValue(&rows, createValueUInt(bytes)); \
+        mbAddValue(&rows, createValueDouble(avg)); \
+        mbAddValue(&rows, createValueDouble(min)); \
+        mbAddValue(&rows, createValueDouble(max)); \
+        mbAddValue(&rows, createValueDouble(gb / (avg / 1000.0))); \
     } while (0);
 
 void
@@ -80,12 +80,12 @@ benchMemset32(void)
 {
     BENCH_MEMSET32_HEADER(); 
     for (unsigned i = 0; i <= 18; i++) {
-        BENCH_MEMSET32(memset32_aligned, 1 << i);
-        BENCH_MEMSET32(memset32_aligned_sse2_unaligned, 1 << i); 
-        BENCH_MEMSET32(memset32_aligned_avx_unaligned, 1 << i); 
+        BENCH_MEMSET32(mb_memset32_aligned, 1 << i);
+        BENCH_MEMSET32(mb_memset32_aligned_sse2_unaligned, 1 << i); 
+        BENCH_MEMSET32(mb_memset32_aligned_avx_unaligned, 1 << i); 
     } 
-    benchPrintRows(&rows);
-    freePrintRows(&rows);
+    mbPrintRows(&rows);
+    mbFreeRows(&rows);
 }
 
 #endif

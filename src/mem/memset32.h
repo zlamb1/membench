@@ -1,5 +1,5 @@
-#ifndef MEMSET32_H
-#define MEMSET32_H 1
+#ifndef MB_MEMSET32_H
+#define MB_MEMSET32_H 1
 
 #include <immintrin.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@
  */
 
 static inline void *
-memset32_aligned(void *p, int v, size_t n)
+mb_memset32_aligned(void *p, int v, size_t n)
 {
     int *dp = (int *) p; 
     while (n--)
@@ -22,7 +22,7 @@ memset32_aligned(void *p, int v, size_t n)
 }
 
 static inline void *
-memset32_aligned_sse2_unaligned(void *p, int v, size_t n)
+mb_memset32_aligned_sse2_unaligned(void *p, int v, size_t n)
 {
     size_t x = 0; 
     __m128i vec = _mm_set1_epi32(v); 
@@ -37,7 +37,7 @@ memset32_aligned_sse2_unaligned(void *p, int v, size_t n)
 }
 
 static inline void *
-memset32_aligned_avx_unaligned(void *p, int v, size_t n)
+mb_memset32_aligned_avx_unaligned(void *p, int v, size_t n)
 {
     size_t x = 0; 
     __m256i vec = _mm256_set1_epi32(v); 

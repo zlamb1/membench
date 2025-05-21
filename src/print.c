@@ -11,7 +11,7 @@
 static const char *UNKNOWN_VALUE_TYPE_MESSAGE = "Unknown Value Type"; 
 
 void 
-initPrintRows(struct rows *rows)
+mbInitRows(struct rows *rows)
 {
     assert(rows != NULL); 
     rows->ncols = 0;
@@ -21,13 +21,13 @@ initPrintRows(struct rows *rows)
 }
 
 int
-addPrintCol(struct rows *rows, const char *name, enum ValueType type)
+mbAddColumn(struct rows *rows, const char *name, enum ValueType type)
 {
     assert(rows != NULL); 
     struct column *newCols = realloc(rows->cols, sizeof(struct column) * (++rows->ncols));
     if (newCols == NULL) {
         --rows->ncols;
-        return -ERR_ALLOC;
+        return -MB_ERR_ALLOC;
     }
     rows->cols = newCols;
     struct column *col = rows->cols + (rows->ncols - 1);
@@ -39,7 +39,7 @@ addPrintCol(struct rows *rows, const char *name, enum ValueType type)
 }
 
 void 
-setColumnAligment(struct rows *rows, enum ColumnAlign align)
+mbSetColumnAlign(struct rows *rows, enum ColumnAlign align)
 {
     assert(rows != NULL);
     assert(rows->ncols && rows->cols != NULL); 
@@ -47,7 +47,7 @@ setColumnAligment(struct rows *rows, enum ColumnAlign align)
 }
 
 void 
-setColumnSuffix(struct rows *rows, const char *suffix)
+mbSetColumnSuffix(struct rows *rows, const char *suffix)
 {
     assert(rows != NULL);
     assert(rows->ncols && rows->cols != NULL);
@@ -55,13 +55,13 @@ setColumnSuffix(struct rows *rows, const char *suffix)
 }
 
 int 
-addPrintRow(struct rows *rows)
+mbAddRow(struct rows *rows)
 {
     assert(rows != NULL); 
     struct row *newRows = realloc(rows->rows, sizeof(struct row) * (++rows->nrows));
     if (newRows == NULL) {
         --rows->nrows;
-        return -ERR_ALLOC;
+        return -MB_ERR_ALLOC;
     }
     memset(newRows + (rows->nrows - 1), 0, sizeof(struct row)); 
     rows->rows = newRows;
@@ -69,18 +69,18 @@ addPrintRow(struct rows *rows)
 }
 
 int 
-addPrintValue(struct rows *rows, struct value value)
+mbAddValue(struct rows *rows, struct value value)
 {
     int err; 
     assert(rows != NULL); 
-    if (!rows->nrows && (err = addPrintRow(rows)) != 0) {
+    if (!rows->nrows && (err = mbAddRow(rows)) != 0) {
         return err; 
     }
     struct row *row = (rows->rows + (rows->nrows - 1)); 
     struct value *newValues = realloc(row->values, sizeof(struct value) * (++row->nvals)); 
     if (newValues == NULL) {
         --row->nvals;
-        return -ERR_ALLOC;
+        return -MB_ERR_ALLOC;
     }
     row->values = newValues;
     newValues[row->nvals - 1] = value; 
@@ -88,12 +88,12 @@ addPrintValue(struct rows *rows, struct value value)
 }
 
 int 
-benchPrintRows(struct rows *rows)
+mbPrintRows(struct rows *rows)
 {
     assert(rows != NULL); 
 
     if (!rows->ncols)
-        return -ERR_INVAID_VALUE;
+        return -MB_ERR_INVAID_VALUE;
     
     assert(rows->cols != NULL);
 
@@ -105,7 +105,7 @@ benchPrintRows(struct rows *rows)
              maxSize = 0;
 
     if (maxSizesPerRow == NULL)
-        return -ERR_ALLOC; 
+        return -MB_ERR_ALLOC; 
 
     struct column *cols = rows-> cols; 
 
@@ -190,7 +190,7 @@ benchPrintRows(struct rows *rows)
     char *scratch = malloc(maxSize + 1); 
     if (scratch == NULL) {
         free(maxSizesPerRow); 
-        return -ERR_ALLOC;
+        return -MB_ERR_ALLOC;
     } 
     scratch[maxSize] = '\0'; 
 
@@ -274,7 +274,7 @@ benchPrintRows(struct rows *rows)
 }
 
 void
-freePrintRows(struct rows *rows)
+mbFreeRows(struct rows *rows)
 {
 
     assert(rows != NULL); 
